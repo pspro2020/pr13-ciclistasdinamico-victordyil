@@ -1,43 +1,45 @@
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Random;
-import java.util.concurrent.BrokenBarrierException;
-import java.util.concurrent.CyclicBarrier;
 
 import static java.lang.Thread.sleep;
 
-public class Ciclista implements Runnable {
+public class CiclistaInpuntual implements Runnable {
     Etapa phaser;
     Random random = new Random();
     private final DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("HH:mm:ss");
 
-    public Ciclista(Etapa phaser) {
+    public CiclistaInpuntual(Etapa phaser) {
         this.phaser = phaser;
     }
 
 
     @Override
     public void run() {
-        phaser.register();
-        salirDeCasa();
-        try{
-            phaser.awaitAdvanceInterruptibly(phaser.arrive());
-        } catch (InterruptedException e) {
-            return;
+        if (!phaser.isTerminated()) {
+            phaser.register();
+            salirDeCasa();
+            try {
+                phaser.awaitAdvanceInterruptibly(phaser.arrive());
+            } catch (InterruptedException e) {
+                return;
+            }
+            irGasolineraVenta();
+            try {
+                phaser.awaitAdvanceInterruptibly(phaser.arrive());
+            } catch (InterruptedException e) {
+                return;
+            }
+            irGasolineraVentaGasolinera();
+            try {
+                phaser.awaitAdvanceInterruptibly(phaser.arrive());
+            } catch (InterruptedException e) {
+                return;
+            }
+            irCasa();
+        } else {
+            System.out.println(Thread.currentThread().getName() + " no le dio tiempo a llegar");
         }
-        irGasolineraVenta();
-        try{
-            phaser.awaitAdvanceInterruptibly(phaser.arrive());
-        } catch (InterruptedException e) {
-            return;
-        }
-        irGasolineraVentaGasolinera();
-        try{
-            phaser.awaitAdvanceInterruptibly(phaser.arrive());
-        } catch (InterruptedException e) {
-            return;
-        }
-        irCasa();
     }
 
     private void irCasa() {
